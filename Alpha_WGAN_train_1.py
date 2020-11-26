@@ -25,9 +25,9 @@ def parse_args():
     parser.add_argument('--latentdimension', type=int, default=1000, help='latent dimension')
     parser.add_argument('--iteration', type=int, default=100, help='total iteration')
     parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
-    parser.add_argument('--g_iter', type=int, default=400, help='g_iter')
+    parser.add_argument('--g_iter', type=int, default=1, help='g_iter')
     parser.add_argument('--cd_iter', type=int, default=1, help='cd_iter')
-    parser.add_argument('--d_iter', type=int, default=200, help='d_iter')
+    parser.add_argument('--d_iter', type=int, default=1, help='d_iter')
     parser.add_argument('--dataset', type=str, default='mri', help='dataset_name')
     parser.add_argument('--checkpoint_dir', type=str, default='model',
                         help='Directory name to save the checkpoints')
