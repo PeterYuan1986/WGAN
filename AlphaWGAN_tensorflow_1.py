@@ -17,7 +17,7 @@ class Discriminator(tf.keras.Model):
         self.bn3 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv4 = tf.keras.layers.Conv3D(ch_in * 8, 4, strides=2, padding='same', name='conv4')
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
-        self.conv5 = tf.keras.layers.Conv3D(1, strides=1, padding='valid', name='conv5')
+        self.conv5 = tf.keras.layers.Conv3D(1, 4,strides=1, padding='valid', name='conv5')
 
     def call(self, input, training=True, mask=None):
         x = input
