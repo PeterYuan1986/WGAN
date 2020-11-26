@@ -4,11 +4,11 @@ loss_object = tf.losses.BinaryCrossentropy(from_logits=True)
 
 
 def d_f_loss(f_logit):
-    return loss_object(tf.zeros_like(f_logit), f_logit)
+    return L1_loss(tf.zeros_like(f_logit), f_logit)
 
 
 def d_r_loss(r_logit):
-    return loss_object(tf.ones_like(r_logit), r_logit)
+    return L1_loss(tf.ones_like(r_logit), r_logit)
 
 
 def c_f_loss(f_logit):

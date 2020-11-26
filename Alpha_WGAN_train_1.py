@@ -112,13 +112,13 @@ def main():
         ###############################################
         # Train D
         ###############################################
-        iter_start_time = time.time()
         C.trainable = False
         D.trainable = True
         E.trainable = False
         G.trainable = False
 
         for iters in range(d_iter):
+            iter_start_time = time.time()
             with tf.GradientTape() as a:
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension), mean=0, stddev=1)
                 real_images = next(data_set_iter)
@@ -145,6 +145,7 @@ def main():
         ###############################################
 
         for iters in range(g_iter):
+            iter_start_time = time.time()
             with tf.GradientTape() as t:
                 #real_images = next(data_set_iter)
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension),mean=0, stddev=1)
@@ -170,6 +171,7 @@ def main():
         E.trainable = False
         G.trainable = True
         for iters in range(g_iter):
+            iter_start_time = time.time()
             with tf.GradientTape(persistent=True) as s:
                 real_images = next(data_set_iter)
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension), mean=0, stddev=1)
