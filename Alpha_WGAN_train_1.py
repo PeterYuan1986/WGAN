@@ -1,7 +1,7 @@
 from tensorflow.python.data.experimental import prefetch_to_device
 from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
 from Alpha_WGAN_loss import *
-from AlphaWGAN_tensorflow import *
+from AlphaWGAN_tensorflow_1 import *
 import argparse
 import time
 from Alpha_WGAN_dataset_preprocess import *
@@ -22,12 +22,12 @@ def parse_args():
     parser.add_argument('--lamda2', type=int, default='10', help='Lamda2 in G_loss')
     parser.add_argument('--lr', type=int, default=0.0002, help='learning rate for all four model')
     parser.add_argument('--beta1', type=float, default=0.5, help='Decay rate for 1st moment of Adam')
-    parser.add_argument('--latentdimension', type=int, default=1000, help='latent dimension')
-    parser.add_argument('--iteration', type=int, default=200000, help='total iteration')
+    parser.add_argument('--latentdimension', type=int, default=2000, help='latent dimension')
+    parser.add_argument('--iteration', type=int, default=100, help='total iteration')
     parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
-    parser.add_argument('--g_iter', type=int, default=1, help='g_iter')
+    parser.add_argument('--g_iter', type=int, default=400, help='g_iter')
     parser.add_argument('--cd_iter', type=int, default=1, help='cd_iter')
-    parser.add_argument('--d_iter', type=int, default=1, help='d_iter')
+    parser.add_argument('--d_iter', type=int, default=200, help='d_iter')
     parser.add_argument('--dataset', type=str, default='mri', help='dataset_name')
     parser.add_argument('--checkpoint_dir', type=str, default='model',
                         help='Directory name to save the checkpoints')
@@ -109,83 +109,115 @@ def main():
     start_time = time.time()
 
     for iteration in range(TOTAL_ITER):
-        iter_start_time = time.time()
-        C.trainable = False
-        D.trainable = False
-        ###############################################
-        # Train Encoder - Generator
-        ###############################################
-
-        for iters in range(g_iter):
-            with tf.GradientTape(persistent=True) as t:
-                real_images = next(data_set_iter)
-                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
-                z_hat = E(real_images)
-                x_hat = G(z_hat)  # x_rec
-                x_rand = G(z_rand)
-                c_loss = -tf.math.reduce_mean(C(z_hat))
-
-                d_real_loss = tf.math.reduce_mean(D(x_hat))
-                d_fake_loss = tf.math.reduce_mean(D(x_rand))
-                d_loss = -d_fake_loss - d_real_loss
-                l1_loss = args.lamda2 * L1_loss(x_hat, real_images)
-
-                loss1 = l1_loss + c_loss + d_loss
-
-            G_grad = t.gradient(loss1, G.trainable_variables)
-            G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
-            E_grad = t.gradient(loss1, E.trainable_variables)
-            E_optimizer.apply_gradients(zip(E_grad, E.trainable_variables))
-
         ###############################################
         # Train D
         ###############################################
+        iter_start_time = time.time()
         C.trainable = False
         D.trainable = True
         E.trainable = False
         G.trainable = False
 
         for iters in range(d_iter):
-            with tf.GradientTape() as t:
-                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
+            with tf.GradientTape() as a:
+                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension), mean=0, stddev=1)
                 real_images = next(data_set_iter)
-                z_hat = E(real_images)
-                x_hat = G(z_hat)
+                x_real=G(real_images)
+                #z_hat = E(real_images)
+                #x_hat = G(z_hat)
                 x_rand = G(z_rand)
-                x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
-
+                #x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
+                d_f_loss(x_rand)
+                d_r_loss(x_real)
                 gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
-                gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
-                loss2 = x_loss2 + gradient_penalty_r + gradient_penalty_h
+                #gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
+                loss2 = d_f_loss+d_r_loss + gradient_penalty_r
 
-                D_grad = t.gradient(loss2, D.trainable_variables)
+                D_grad = a.gradient(loss2, D.trainable_variables)
                 D_optimizer.apply_gradients(zip(D_grad, D.trainable_variables))
+                print("Trainning Discrminatior iter: [%6d/%6d] time: %4.4f d_loss: %.8f" % (
+                    iters, d_iter, time.time() - iter_start_time, loss2))
 
-        ###############################################
-        # Train CD
-        ###############################################
-        C.trainable = True
+        C.trainable = False
         D.trainable = False
         E.trainable = False
-        G.trainable = False
+        G.trainable = True
+        ###############################################
+        # Train Encoder - Generator
+        ###############################################
 
-        for iters in range(cd_iter):
-            with tf.GradientTape() as t:
-                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
+        for iters in range(g_iter):
+            with tf.GradientTape(persistent=True) as t:
+                #real_images = next(data_set_iter)
+                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension),mean=0, stddev=1)
+                #z_hat = E(real_images)
+                #x_hat = G(z_hat)  # x_rec
+                x_rand = G(z_rand)
+                #c_loss = -tf.math.reduce_mean(C(z_hat))
 
-                gradient_penalty_cd = gradient_penalty(C, z_hat, z_rand)
-                loss3 = -tf.reduce_mean(C(z_rand)) - c_loss + gradient_penalty_cd
+                #d_real_loss = tf.math.reduce_mean(D(x_hat))
+                d_fake_loss = d_r_loss(D(x_rand))
+                #d_loss = -d_fake_loss - d_real_loss
+                #l1_loss = args.lamda2 * L1_loss(x_hat, real_images)
 
-                C_grad = t.gradient(loss3, C.trainable_variables)
-                C_optimizer.apply_gradients(zip(C_grad, C.trainable_variables))
+                loss1 = d_fake_loss
 
-        print("iter: [%6d/%6d] time: %4.4f d_loss: %.8f, g_loss: %.8f, c_loss: %.8f" % (
-            iteration, TOTAL_ITER, time.time() - iter_start_time, loss2, loss1, loss3))
+            G_grad = t.gradient(loss1, G.trainable_variables)
+            G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
+            E_grad = t.gradient(loss1, E.trainable_variables)
+            E_optimizer.apply_gradients(zip(E_grad, E.trainable_variables))
+            print("Trainning Generator iter: [%6d/%6d] time: %4.4f g_loss: %.8f" % (
+                iters, g_iter, time.time() - iter_start_time, loss1))
 
-        if iteration % 1000 == 0:
+        C.trainable = False
+        D.trainable = True
+        E.trainable = False
+        G.trainable = True
+        for iters in range(g_iter):
+            with tf.GradientTape(persistent=True) as s:
+                real_images = next(data_set_iter)
+                z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension), mean=0, stddev=1)
+                x_real = G(real_images)
+                x_rand = G(z_rand)
+                gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
+                loss1 = d_r_loss(x_real)-d_f_loss(x_rand)+gradient_penalty_r
+
+            G_grad = s.gradient(loss1, G.trainable_variables)
+            G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
+            D_grad = s.gradient(loss1, D.trainable_variables)
+            D_optimizer.apply_gradients(zip(E_grad, D.trainable_variables))
+            print("Trainning Combination iter: [%6d/%6d] time: %4.4f g_loss: %.8f" % (
+                iters, g_iter, time.time() - iter_start_time, loss1))
+
+
+
+
+
+        # ###############################################
+        # # Train CD
+        # ###############################################
+        # C.trainable = True
+        # D.trainable = False
+        # E.trainable = False
+        # G.trainable = False
+        #
+        # for iters in range(cd_iter):
+        #     with tf.GradientTape() as t:
+        #         z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
+        #
+        #         gradient_penalty_cd = gradient_penalty(C, z_hat, z_rand)
+        #         loss3 = -tf.reduce_mean(C(z_rand)) - c_loss + gradient_penalty_cd
+        #
+        #         C_grad = t.gradient(loss3, C.trainable_variables)
+        #         C_optimizer.apply_gradients(zip(C_grad, C.trainable_variables))
+        #
+        # print("iter: [%6d/%6d] time: %4.4f d_loss: %.8f, g_loss: %.8f, c_loss: %.8f" % (
+        #     iteration, TOTAL_ITER, time.time() - iter_start_time, loss2, loss1, loss3))
+
+        if iteration % 1 == 0:
             ckpt.save(file_prefix=checkpoint_prefix)
 
-        if iteration % 500 == 0:
+        if iteration % 10 == 0:
             sample = postprocess_images(x_rand)
             new_image = nib.Nifti1Image(np.int16(sample[0]), affine=np.eye(4))
             name = dataset_name + '_iteration_' + str(iteration) + '.nii'

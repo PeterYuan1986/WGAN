@@ -17,7 +17,9 @@ class Discriminator(tf.keras.Model):
         self.bn3 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv4 = tf.keras.layers.Conv3D(ch_in * 8, 4, strides=2, padding='same', name='conv4')
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
-        self.conv5 = tf.keras.layers.Conv3D(1, 4, strides=1, padding='valid', name='conv5')
+        self.conv5 = tf.keras.layers.Conv3D(ch_in * 8, 4, strides=1, padding='valid', name='conv5')
+        self.fc1 = tf.keras.layers.Dense(ch_in * 8, activation="relu")
+        self.fc2 = tf.keras.layers.Dense(1, activation="sigmoid")
 
     def call(self, input, training=True, mask=None):
         x = input
@@ -37,6 +39,8 @@ class Discriminator(tf.keras.Model):
         x = self.leakyrelu4(x)
 
         x = self.conv5(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
 
         return x
 
@@ -188,5 +192,5 @@ class Generator(tf.keras.Model):
         return model.summary()
 
 
-ss = Generator()
+ss = Discriminator()
 ss.summary()
