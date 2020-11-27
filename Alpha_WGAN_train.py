@@ -100,7 +100,7 @@ def main():
     start_iteration=0
     if manager.latest_checkpoint:
         ckpt.restore(manager.latest_checkpoint).expect_partial()
-        start_iteration = int(manager.latest_checkpoint.split('-')[-1])
+        start_iteration = int(manager.latest_checkpoint.split('-')[-1])*1000+1
         print('Latest checkpoint restored!!')
     else:
         print('Not restoring from saved checkpoint')
