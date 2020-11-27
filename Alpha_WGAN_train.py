@@ -8,6 +8,7 @@ from Alpha_WGAN_dataset_preprocess import *
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
+
 # ==============================================================================
 # =                                   param                                    =
 # ==============================================================================
@@ -18,8 +19,8 @@ def parse_args():
     parser.add_argument('--img_width', type=int, default='64', help='img_width')
     parser.add_argument('--img_height', type=int, default='64', help='img_height')
     parser.add_argument('--img_depth', type=int, default='64', help='img_depth')
-    parser.add_argument('--grw', type=int, default='100', help='gradient_penalty_weight: Lamda1')
-    parser.add_argument('--lamda2', type=int, default='100', help='Lamda2 in G_loss')
+    parser.add_argument('--grw', type=int, default='10', help='gradient_penalty_weight: Lamda1')
+    parser.add_argument('--lamda2', type=int, default='10', help='Lamda2 in G_loss')
     parser.add_argument('--lr', type=int, default=0.0002, help='learning rate for all four model')
     parser.add_argument('--beta1', type=float, default=0.5, help='Decay rate for 1st moment of Adam')
     parser.add_argument('--latentdimension', type=int, default=1000, help='latent dimension')
@@ -118,7 +119,7 @@ def main():
         ###############################################
 
         for iters in range(g_iter):
-            with tf.GradientTape() as t,tf.GradientTape() as b:
+            with tf.GradientTape() as t, tf.GradientTape() as b:
                 real_images = next(data_set_iter)
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
                 z_hat = E(real_images)
@@ -130,7 +131,7 @@ def main():
 
                 d_real_loss = tf.math.reduce_mean(D(x_hat))
                 d_fake_loss = tf.math.reduce_mean(D(x_rand))
-                d_loss = -d_fake_loss - d_real_loss
+                d_loss = -(-d_fake_loss - d_real_loss)
                 l1_loss = args.lamda2 * L1_loss(x_hat, real_images)
                 loss1 = l1_loss + c_loss + d_loss
 
@@ -139,7 +140,6 @@ def main():
             G_grad = t.gradient(loss1, G.trainable_variables)
             G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
             G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
-
 
         ###############################################
         # Train D
@@ -186,10 +186,10 @@ def main():
         print("iter: [%6d/%6d] time: %4.4f d_loss: %.8f, g_loss: %.8f, c_loss: %.8f" % (
             iteration, TOTAL_ITER, time.time() - iter_start_time, loss2, loss1, loss3))
 
-        if iteration % 1000 == 0:
+        if (iteration != 0) & (iteration % 1000 == 0):
             ckpt.save(file_prefix=checkpoint_prefix)
 
-        if iteration % 500 == 0:
+        if (iteration != 0) & (iteration % 2000 == 0):
             sample = postprocess_images(x_rand)
             new_image = nib.Nifti1Image(np.int16(sample[0]), affine=np.eye(4))
             name = dataset_name + '_iteration_' + str(iteration) + '.nii'
