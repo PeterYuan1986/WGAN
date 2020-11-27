@@ -6,7 +6,7 @@ import argparse
 import time
 from Alpha_WGAN_dataset_preprocess import *
 import tensorflow as tf
-
+import tensorflow.keras.backend as K
 
 # ==============================================================================
 # =                                   param                                    =
@@ -18,8 +18,8 @@ def parse_args():
     parser.add_argument('--img_width', type=int, default='64', help='img_width')
     parser.add_argument('--img_height', type=int, default='64', help='img_height')
     parser.add_argument('--img_depth', type=int, default='64', help='img_depth')
-    parser.add_argument('--grw', type=int, default='10', help='gradient_penalty_weight: Lamda1')
-    parser.add_argument('--lamda2', type=int, default='10', help='Lamda2 in G_loss')
+    parser.add_argument('--grw', type=int, default='100', help='gradient_penalty_weight: Lamda1')
+    parser.add_argument('--lamda2', type=int, default='100', help='Lamda2 in G_loss')
     parser.add_argument('--lr', type=int, default=0.0002, help='learning rate for all four model')
     parser.add_argument('--beta1', type=float, default=0.5, help='Decay rate for 1st moment of Adam')
     parser.add_argument('--latentdimension', type=int, default=1000, help='latent dimension')
@@ -112,30 +112,34 @@ def main():
         iter_start_time = time.time()
         C.trainable = False
         D.trainable = False
+
         ###############################################
         # Train Encoder - Generator
         ###############################################
 
         for iters in range(g_iter):
-            with tf.GradientTape(persistent=True) as t:
+            with tf.GradientTape() as t,tf.GradientTape() as b:
                 real_images = next(data_set_iter)
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
                 z_hat = E(real_images)
                 x_hat = G(z_hat)  # x_rec
                 x_rand = G(z_rand)
+                print(np.max(x_rand))
+                print(np.min(x_rand))
                 c_loss = -tf.math.reduce_mean(C(z_hat))
 
                 d_real_loss = tf.math.reduce_mean(D(x_hat))
                 d_fake_loss = tf.math.reduce_mean(D(x_rand))
                 d_loss = -d_fake_loss - d_real_loss
                 l1_loss = args.lamda2 * L1_loss(x_hat, real_images)
-
                 loss1 = l1_loss + c_loss + d_loss
 
+            E_grad = b.gradient(loss1, E.trainable_variables)
+            E_optimizer.apply_gradients(zip(E_grad, E.trainable_variables))
             G_grad = t.gradient(loss1, G.trainable_variables)
             G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
-            E_grad = t.gradient(loss1, E.trainable_variables)
-            E_optimizer.apply_gradients(zip(E_grad, E.trainable_variables))
+            G_optimizer.apply_gradients(zip(G_grad, G.trainable_variables))
+
 
         ###############################################
         # Train D

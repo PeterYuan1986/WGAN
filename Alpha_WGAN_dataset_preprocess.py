@@ -18,7 +18,6 @@ class Image_data:
         nib_img = nib.load(img_path)
         img_ary = nib_img.get_fdata()
         img = resize(img_ary, self.img_width, self.img_height, self.img_depth)
-        img= (img -np.min(img))/(np.max(img)-np.min(img))
         y = np.expand_dims(img, axis=3)
         x_decode = tf.convert_to_tensor(y, dtype='float32')
         return x_decode
@@ -30,7 +29,7 @@ class Image_data:
 
         for idx, path in enumerate(self.dataset):
             image = self.image_to_tf(path)
-            #image = preprocess_fit_train_image(image)
+            image = preprocess_fit_train_image(image)
             self.dataset[idx] = image
 
 def resize(img, dx, dy, dz):
@@ -39,7 +38,6 @@ def resize(img, dx, dy, dz):
 
 def adjust_dynamic_range(images, range_in=(0, 255), range_out=(-1, 1),
                          out_dtype='float32'):  # preprocess, change 255 into -1 to 1.
-
     scale = (range_out[1] - range_out[0]) / (range_in[1] - range_in[0])
     bias = range_out[0] - range_in[0] * scale
     images = images * scale + bias
@@ -55,6 +53,6 @@ def preprocess_fit_train_image(images):
 
 def postprocess_images(images):
     images = tf.squeeze(images,[-1]) # [1, 2, 3, 1]
-    images = adjust_dynamic_range(images, range_in=(0, 1.0), range_out=(0.0, 255.0), out_dtype=tf.dtypes.float32)
+    images = adjust_dynamic_range(images, range_in=(-1, 1.0), range_out=(0.0, 255.0), out_dtype=tf.dtypes.float32)
     images = tf.cast(images, dtype=tf.dtypes.int16)
     return images
