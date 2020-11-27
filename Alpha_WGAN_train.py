@@ -97,8 +97,10 @@ def main():
                                C_optimizer=C_optimizer, E_optimizer=E_optimizer)
     manager = tf.train.CheckpointManager(ckpt, checkpoint_dir, max_to_keep=1)
 
+    start_iteration=0
     if manager.latest_checkpoint:
         ckpt.restore(manager.latest_checkpoint).expect_partial()
+        start_iteration = int(manager.latest_checkpoint.split('-')[-1])
         print('Latest checkpoint restored!!')
     else:
         print('Not restoring from saved checkpoint')
@@ -109,7 +111,7 @@ def main():
     TOTAL_ITER = args.iteration
     start_time = time.time()
 
-    for iteration in range(TOTAL_ITER):
+    for iteration in range(start_iteration,TOTAL_ITER):
         iter_start_time = time.time()
         C.trainable = False
         D.trainable = False
