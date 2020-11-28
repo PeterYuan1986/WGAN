@@ -97,10 +97,10 @@ def main():
                                C_optimizer=C_optimizer, E_optimizer=E_optimizer)
     manager = tf.train.CheckpointManager(ckpt, checkpoint_dir, max_to_keep=1)
 
-    start_iteration=0
+    start_iteration = 0
     if manager.latest_checkpoint:
         ckpt.restore(manager.latest_checkpoint).expect_partial()
-        start_iteration = int(manager.latest_checkpoint.split('-')[-1])*1000+1
+        start_iteration = int(manager.latest_checkpoint.split('-')[-1]) * 1000 + 1
         print('Latest checkpoint restored!!')
     else:
         print('Not restoring from saved checkpoint')
@@ -111,7 +111,7 @@ def main():
     TOTAL_ITER = args.iteration
     start_time = time.time()
 
-    for iteration in range(start_iteration,TOTAL_ITER):
+    for iteration in range(start_iteration, TOTAL_ITER):
         iter_start_time = time.time()
         C.trainable = False
         D.trainable = False
@@ -158,8 +158,8 @@ def main():
                 x_rand = G(z_rand)
                 x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
 
-                gradient_penalty_r = 0#gradient_penalty(D, real_images, x_rand)
-                gradient_penalty_h =0# gradient_penalty(D, real_images, x_hat)
+                gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
+                gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
                 loss2 = x_loss2 + gradient_penalty_r + gradient_penalty_h
 
                 D_grad = t.gradient(loss2, D.trainable_variables)
