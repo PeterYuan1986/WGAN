@@ -186,7 +186,3 @@ class Generator(tf.keras.Model):
         x = tf.keras.Input(shape=self.inputshpe)
         model = tf.keras.Model(inputs=[x], outputs=self.call(x), name='Generator')
         return model.summary()
-
-
-ss = Generator()
-ss.summary()

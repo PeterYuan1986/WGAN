@@ -30,8 +30,8 @@ class Image_data:
         for idx, path in enumerate(self.dataset):
             image = self.image_to_tf(path)
             self.dataset[idx] = image
-        max=np.max(self.dataset)
-        min = np.min(self.dataset)
+        max=tf.reduce_max(self.dataset)
+        min = tf.reduce_min(self.dataset)
         for idx, image in enumerate(self.dataset):
             self.dataset[idx] = preprocess_fit_train_image(min,max,image)
 
