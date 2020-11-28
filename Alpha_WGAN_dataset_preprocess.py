@@ -29,8 +29,11 @@ class Image_data:
 
         for idx, path in enumerate(self.dataset):
             image = self.image_to_tf(path)
-            image = preprocess_fit_train_image(image)
             self.dataset[idx] = image
+        max=np.max(self.dataset)
+        min = np.min(self.dataset)
+        for idx, image in enumerate(self.dataset):
+            self.dataset[idx] = preprocess_fit_train_image(min,max,image)
 
 def resize(img, dx, dy, dz):
     return skTrans.resize(img, (dx, dy, dz), order=1, preserve_range=True)
@@ -46,8 +49,8 @@ def adjust_dynamic_range(images, range_in=(0, 255), range_out=(-1, 1),
     return images
 
 
-def preprocess_fit_train_image(images):
-    images = adjust_dynamic_range(images, range_in=(0.0, 255.0), range_out=(-1.0, 1.0), out_dtype=tf.dtypes.float32)
+def preprocess_fit_train_image(min,max,images):
+    images = adjust_dynamic_range(images, range_in=(min, max), range_out=(-1.0, 1.0), out_dtype=tf.dtypes.float32)
     return images
 
 

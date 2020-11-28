@@ -158,8 +158,8 @@ def main():
                 x_rand = G(z_rand)
                 x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
 
-                gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
-                gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
+                gradient_penalty_r = 0#gradient_penalty(D, real_images, x_rand)
+                gradient_penalty_h =0# gradient_penalty(D, real_images, x_hat)
                 loss2 = x_loss2 + gradient_penalty_r + gradient_penalty_h
 
                 D_grad = t.gradient(loss2, D.trainable_variables)
