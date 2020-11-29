@@ -110,11 +110,16 @@ def main():
     cd_iter = args.cd_iter
     TOTAL_ITER = args.iteration
     start_time = time.time()
+    valid = np.ones((args.batch_size, 1))
+    fake = np.zeros((args.batch_size, 1))
+    bce = tf.keras.losses.BinaryCrossentropy()
 
     for iteration in range(start_iteration, TOTAL_ITER):
         iter_start_time = time.time()
         C.trainable = False
         D.trainable = False
+        E.trainable = True
+        G.trainable = True
 
         ###############################################
         # Train Encoder - Generator
@@ -127,11 +132,16 @@ def main():
                 z_hat = E(real_images)
                 x_hat = G(z_hat)  # x_rec
                 x_rand = G(z_rand)
-                c_loss = -tf.math.reduce_mean(C(z_hat))
+                # c_loss = -tf.math.reduce_mean(C(z_hat))
+                c_loss = bce(valid, C(z_hat)).numpy()
 
-                d_real_loss = tf.math.reduce_mean(D(x_hat))
-                d_fake_loss = tf.math.reduce_mean(D(x_rand))
-                d_loss = -d_fake_loss - d_real_loss
+                # d_real_loss = tf.math.reduce_mean(D(x_hat))
+                d_real_loss = bce(valid, D(x_hat)).numpy()
+
+                # d_fake_loss = tf.math.reduce_mean(D(x_rand))
+                d_fake_loss = bce(valid, D(x_rand)).numpy()
+
+                d_loss = d_fake_loss + d_real_loss
                 l1_loss = args.lamda2 * L1_loss(x_hat, real_images)
                 loss1 = l1_loss + c_loss + d_loss
 
@@ -156,11 +166,13 @@ def main():
                 z_hat = E(real_images)
                 x_hat = G(z_hat)
                 x_rand = G(z_rand)
-                x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
-
-                gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
-                gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
-                loss2 = x_loss2 + gradient_penalty_r + gradient_penalty_h
+                # x_loss2 = -2 * tf.reduce_mean(D(real_images)) + tf.reduce_mean(D(x_hat)) + tf.reduce_mean(D(x_rand))
+                x_loss2 = 2 * bce(valid, D(real_images)) + bce(fake, D(x_hat))
+                z_loss2 = bce(fake, D(x_rand))
+                # gradient_penalty_r = gradient_penalty(D, real_images, x_rand)
+                # gradient_penalty_h = gradient_penalty(D, real_images, x_hat)
+                # loss2 = x_loss2 + gradient_penalty_r + gradient_penalty_h
+                loss2 = x_loss2 + z_loss2
 
                 D_grad = t.gradient(loss2, D.trainable_variables)
                 D_optimizer.apply_gradients(zip(D_grad, D.trainable_variables))
@@ -177,9 +189,12 @@ def main():
             with tf.GradientTape() as t:
                 z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
 
-                gradient_penalty_cd = gradient_penalty(C, z_hat, z_rand)
-                loss3 = -tf.reduce_mean(C(z_rand)) - c_loss + gradient_penalty_cd
+                #gradient_penalty_cd = gradient_penalty(C, z_hat, z_rand)
+                # loss3 = -tf.reduce_mean(C(z_rand)) - c_loss + gradient_penalty_cd
 
+                x_loss3 = bce(fake, C(z_hat))
+                z_loss3 = bce(valid, C(z_rand))
+                loss3 = x_loss3 + z_loss3
                 C_grad = t.gradient(loss3, C.trainable_variables)
                 C_optimizer.apply_gradients(zip(C_grad, C.trainable_variables))
 
@@ -190,6 +205,8 @@ def main():
             ckpt.save(file_prefix=checkpoint_prefix)
 
         if (iteration != 0) & (iteration % 2000 == 0):
+            z_rand = tf.random.normal(shape=(args.batch_size, args.latentdimension))
+            x_rand = G(z_rand,training=False)
             sample = postprocess_images(x_rand)
             new_image = nib.Nifti1Image(np.int16(sample[0]), affine=np.eye(4))
             name = dataset_name + '_iteration_' + str(iteration) + '.nii'

@@ -224,7 +224,5 @@ def main():
             sample_dir = os.path.join(sample_dir, name)
             nib.save(new_image, sample_dir)
     print("trainning done. Total trainning time: %4.4f" % (time.time() - start_time))
-
-
 if __name__ == '__main__':
     main()

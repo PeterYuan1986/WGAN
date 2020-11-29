@@ -19,6 +19,7 @@ class Discriminator(tf.keras.Model):
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv5 = tf.keras.layers.Conv3D(1, 4, strides=1, padding='valid', name='conv5')
 
+        self.sigmond = tf.keras.layers.Dense(1, activation='sigmoid')
     def call(self, input, training=True, mask=None):
         x = input
         x = self.conv1(x)
@@ -38,6 +39,8 @@ class Discriminator(tf.keras.Model):
 
         x = self.conv5(x)
 
+        x = tf.keras.layers.Flatten()(x)
+        x = self.sigmond(x)
         return x
 
     def summary(self):
@@ -66,6 +69,7 @@ class Encoder(tf.keras.Model):
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv5 = tf.keras.layers.Conv3D(self.noise, kernel_size=4, strides=1, padding='valid', name='conv5')
 
+
     def call(self, input, training=True, mask=None):
         x = input
 
@@ -86,6 +90,7 @@ class Encoder(tf.keras.Model):
 
         x = self.conv5(x)
         x = tf.reshape(x, (-1, self.noise))
+
         return x
 
     def summary(self):
@@ -105,7 +110,7 @@ class Code_Discriminator(tf.keras.Model):
         self.leakyrelu2 = tf.keras.layers.LeakyReLU(alpha=0.2)
         self.bn2 = tf.keras.layers.BatchNormalization(axis=-1)
         self.fc2 = tf.keras.layers.Dense(4096)
-        self.fc3 = tf.keras.layers.Dense(1)
+        self.fc3 = tf.keras.layers.Dense(1, activation='sigmoid')
 
     def call(self, input):
         x = self.fc1(input)
@@ -115,7 +120,6 @@ class Code_Discriminator(tf.keras.Model):
         x = self.fc2(x)
         x = self.bn2(x)
         x = self.leakyrelu2(x)
-
         x = self.fc3(x)
         return x
 
@@ -186,3 +190,5 @@ class Generator(tf.keras.Model):
         x = tf.keras.Input(shape=self.inputshpe)
         model = tf.keras.Model(inputs=[x], outputs=self.call(x), name='Generator')
         return model.summary()
+ss=Discriminator()
+ss.summary()
