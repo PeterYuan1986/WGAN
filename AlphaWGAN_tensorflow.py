@@ -19,7 +19,6 @@ class Discriminator(tf.keras.Model):
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv5 = tf.keras.layers.Conv3D(1, 4, strides=1, padding='valid', name='conv5')
 
-        self.sigmond = tf.keras.layers.Dense(1, activation='sigmoid')
     def call(self, input, training=True, mask=None):
         x = input
         x = self.conv1(x)
@@ -39,8 +38,6 @@ class Discriminator(tf.keras.Model):
 
         x = self.conv5(x)
 
-        x = tf.keras.layers.Flatten()(x)
-        x = self.sigmond(x)
         return x
 
     def summary(self):
@@ -110,7 +107,7 @@ class Code_Discriminator(tf.keras.Model):
         self.leakyrelu2 = tf.keras.layers.LeakyReLU(alpha=0.2)
         self.bn2 = tf.keras.layers.BatchNormalization(axis=-1)
         self.fc2 = tf.keras.layers.Dense(4096)
-        self.fc3 = tf.keras.layers.Dense(1, activation='sigmoid')
+        self.fc3 = tf.keras.layers.Dense(1)
 
     def call(self, input):
         x = self.fc1(input)

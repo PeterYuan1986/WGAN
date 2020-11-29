@@ -155,7 +155,7 @@ def main():
         # Train D
         ###############################################
         C.trainable = False
-        D.trainable = True
+        D.trainable = False
         E.trainable = False
         G.trainable = False
 
@@ -180,7 +180,7 @@ def main():
         ###############################################
         # Train CD
         ###############################################
-        C.trainable = True
+        C.trainable = False
         D.trainable = False
         E.trainable = False
         G.trainable = False
