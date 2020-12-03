@@ -76,10 +76,10 @@ def main():
     # =                                   model                                    =
     # ==============================================================================
 
-    G = Generator()
+    G = Generator(noise=3000)
     D = Discriminator()
-    C = Code_Discriminator()
-    E = Encoder()
+    C = Code_Discriminator(noise=3000)
+    E = Encoder(noise=3000)
 
     G.summary()
     D.summary()

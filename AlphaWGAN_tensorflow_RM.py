@@ -134,7 +134,7 @@ class Code_Discriminator(tf.keras.Model):
 
 
 class Generator(tf.keras.Model):
-    def __init__(self, inputshpe=(1000,), noise=1000, channel: int = 64):
+    def __init__(self, inputshpe=(3000,), noise=3000, channel: int = 64):
         super(Generator, self).__init__()
         self.inputshpe = inputshpe
         ch_in = channel
