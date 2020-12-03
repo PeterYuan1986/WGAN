@@ -100,7 +100,7 @@ class Encoder(tf.keras.Model):
 
 
 class Code_Discriminator(tf.keras.Model):
-    def __init__(self, inputshpe=(1000,), noise: int = 1000, name='Code_Discriminator'):
+    def __init__(self, inputshpe=(3000,), noise: int = 3000, name='Code_Discriminator'):
         super(Code_Discriminator, self).__init__(name=name)
         self.inputshpe = inputshpe
         self.noise = noise
