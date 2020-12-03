@@ -17,20 +17,26 @@ class Discriminator(tf.keras.Model):
         self.bn3 = tf.keras.layers.BatchNormalization(axis=-1)
         self.conv4 = tf.keras.layers.Conv3D(ch_in * 8, 4, strides=2, padding='same', name='conv4')
         self.bn4 = tf.keras.layers.BatchNormalization(axis=-1)
-        self.conv5 = tf.keras.layers.Conv3D(1, 4,strides=1, padding='valid', name='conv5')
+        self.conv5 = tf.keras.layers.Conv3D(1, 4, strides=1, padding='valid', name='conv5')
+        self.do1 = tf.keras.layers.Dropout(0.3, noise_shape=None, seed=None)
+        self.do2 = tf.keras.layers.Dropout(0.3, noise_shape=None, seed=None)
+        self.do3 = tf.keras.layers.Dropout(0.3, noise_shape=None, seed=None)
 
     def call(self, input, training=True, mask=None):
         x = input
         x = self.conv1(x)
         x = self.leakyrelu1(x)
+        x = self.do1(x)
 
         x = self.conv2(x)
         x = self.bn2(x)
         x = self.leakyrelu2(x)
+        x = self.do2(x)
 
         x = self.conv3(x)
         x = self.bn3(x)
         x = self.leakyrelu3(x)
+        x = self.do3(x)
 
         x = self.conv4(x)
         x = self.bn4(x)
@@ -106,10 +112,13 @@ class Code_Discriminator(tf.keras.Model):
         self.fc2 = tf.keras.layers.Dense(4096)
         self.fc3 = tf.keras.layers.Dense(1)
 
+        self.do1 = tf.keras.layers.Dropout(0.3, noise_shape=None, seed=None)
+
     def call(self, input):
         x = self.fc1(input)
         x = self.bn1(x)
         x = self.leakyrelu1(x)
+        x = self.do1(x)
 
         x = self.fc2(x)
         x = self.bn2(x)

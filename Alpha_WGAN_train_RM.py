@@ -183,12 +183,13 @@ def main():
         print("iter: [%6d/%6d] time: %4.4f d_loss: %.8f, g_loss: %.8f, c_loss: %.8f" % (
             iteration, TOTAL_ITER, time.time() - iter_start_time, loss2, loss1, loss3))
 
-        if iteration % 50 == 0:
+        if iteration % 1000 == 0:
             ckpt.save(file_prefix=checkpoint_prefix)
 
-        if iteration % 50 == 0:
+        if iteration % 1000 == 0:
             sample = postprocess_images(x_rand)
-            new_image = nib.Nifti1Image(np.int16(sample[0]), affine=np.eye(4))
+            tem = np.uint8(sample[0])
+            new_image = nib.Nifti1Image(tem, affine=np.eye(4))
             name = dataset_name + '_iteration_' + str(iteration) + '.nii'
             sample_dir = './sample'
             if not os.path.exists(sample_dir):
